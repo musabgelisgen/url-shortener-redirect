@@ -28,23 +28,21 @@ public class JedisPublisher {
     public void cacheNewLink(Link link, List<String> browserAndPlatform){
         Map<String, String> linkMap = new HashMap<>();
         linkMap.put("url", link.getUrl());
-        linkMap.put(PlatformType.WINDOWS.value(), String.valueOf(link.getVisitCountFromWindows()));
-        linkMap.put(PlatformType.LINUX.value(), String.valueOf(link.getVisitCountFromLinux()));
-        linkMap.put(PlatformType.MAC.value(), String.valueOf(link.getVisitCountFromOsx()));
-        linkMap.put(PlatformType.ANDROID.value(), String.valueOf(link.getVisitCountFromAndroid()));
-        linkMap.put(PlatformType.IOS.value(), String.valueOf(link.getVisitCountFromIOS()));
-        linkMap.put(PlatformType.OTHER_OS.value(), String.valueOf(link.getVisitCountFromOtherOs()));
+        linkMap.put(PlatformType.WINDOWS.value(), String.valueOf(0));
+        linkMap.put(PlatformType.LINUX.value(), String.valueOf(0));
+        linkMap.put(PlatformType.MAC.value(), String.valueOf(0));
+        linkMap.put(PlatformType.ANDROID.value(), String.valueOf(0));
+        linkMap.put(PlatformType.IOS.value(), String.valueOf(0));
+        linkMap.put(PlatformType.OTHER_OS.value(), String.valueOf(0));
 
-        linkMap.put(BrowserType.CHROME.value(), String.valueOf(link.getVisitCountFromChrome()));
-        linkMap.put(BrowserType.FIREFOX.value(), String.valueOf(link.getVisitCountFromFirefox()));
-        linkMap.put(BrowserType.SAFARI.value(), String.valueOf(link.getVisitCountFromSafari()));
-        linkMap.put(BrowserType.INTERNET_EXPLORER.value(), String.valueOf(link.getVisitCountFromIE()));
-        linkMap.put(BrowserType.OTHER_BROWSER.value(), String.valueOf(link.getVisitCountFromOtherBrowser()));
+        linkMap.put(BrowserType.CHROME.value(), String.valueOf(0));
+        linkMap.put(BrowserType.FIREFOX.value(), String.valueOf(0));
+        linkMap.put(BrowserType.SAFARI.value(), String.valueOf(0));
+        linkMap.put(BrowserType.INTERNET_EXPLORER.value(), String.valueOf(0));
+        linkMap.put(BrowserType.OTHER_BROWSER.value(), String.valueOf(0));
 
-        int browser = Integer.parseInt(linkMap.getOrDefault(browserAndPlatform.get(0), "0")) + 1;
-        int os = Integer.parseInt(linkMap.getOrDefault(browserAndPlatform.get(1), "0")) + 1;
-        linkMap.put(browserAndPlatform.get(0), String.valueOf(browser));
-        linkMap.put(browserAndPlatform.get(1), String.valueOf(os));
+        linkMap.put(browserAndPlatform.get(0), "1");
+        linkMap.put(browserAndPlatform.get(1), "1");
 
         jedis.hset(link.getCode(), linkMap);
         updateShadowExpireTime(link.getCode());
@@ -69,7 +67,7 @@ public class JedisPublisher {
     private void updateShadowExpireTime(String code){
         String shadowCode = "shadow:" + code;
         jedis.set(shadowCode, "");
-        jedis.expire(shadowCode, 5);
+        jedis.expire(shadowCode, 10);
     }
 
     void syncDatabaseWithRedis(String code){
@@ -83,18 +81,18 @@ public class JedisPublisher {
     }
 
     private void updateRepositoryLinkUsingRedisLink(Link link, Map<String, String> redisLink) {
-        link.setVisitCountFromChrome(Integer.parseInt(redisLink.get(BrowserType.CHROME.value())));
-        link.setVisitCountFromFirefox(Integer.parseInt(redisLink.get(BrowserType.FIREFOX.value())));
-        link.setVisitCountFromSafari(Integer.parseInt(redisLink.get(BrowserType.SAFARI.value())));
-        link.setVisitCountFromIE(Integer.parseInt(redisLink.get(BrowserType.INTERNET_EXPLORER.value())));
-        link.setVisitCountFromOtherBrowser(Integer.parseInt(redisLink.get(BrowserType.OTHER_BROWSER.value())));
+        link.setVisitCountFromChrome(link.getVisitCountFromChrome() + Integer.parseInt(redisLink.get(BrowserType.CHROME.value())));
+        link.setVisitCountFromFirefox(link.getVisitCountFromFirefox() + Integer.parseInt(redisLink.get(BrowserType.FIREFOX.value())));
+        link.setVisitCountFromSafari(link.getVisitCountFromSafari() + Integer.parseInt(redisLink.get(BrowserType.SAFARI.value())));
+        link.setVisitCountFromIE(link.getVisitCountFromIE() + Integer.parseInt(redisLink.get(BrowserType.INTERNET_EXPLORER.value())));
+        link.setVisitCountFromOtherBrowser(link.getVisitCountFromOtherBrowser() + Integer.parseInt(redisLink.get(BrowserType.OTHER_BROWSER.value())));
 
-        link.setVisitCountFromWindows(Integer.parseInt(redisLink.get(PlatformType.WINDOWS.value())));
-        link.setVisitCountFromLinux(Integer.parseInt(redisLink.get(PlatformType.LINUX.value())));
-        link.setVisitCountFromOsx(Integer.parseInt(redisLink.get(PlatformType.MAC.value())));
-        link.setVisitCountFromAndroid(Integer.parseInt(redisLink.get(PlatformType.ANDROID.value())));
-        link.setVisitCountFromIOS(Integer.parseInt(redisLink.get(PlatformType.IOS.value())));
-        link.setVisitCountFromOtherOs(Integer.parseInt(redisLink.get(PlatformType.OTHER_OS.value())));
+        link.setVisitCountFromWindows(link.getVisitCountFromWindows() + Integer.parseInt(redisLink.get(PlatformType.WINDOWS.value())));
+        link.setVisitCountFromLinux(link.getVisitCountFromLinux() + Integer.parseInt(redisLink.get(PlatformType.LINUX.value())));
+        link.setVisitCountFromOsx(link.getVisitCountFromOsx() + Integer.parseInt(redisLink.get(PlatformType.MAC.value())));
+        link.setVisitCountFromAndroid(link.getVisitCountFromAndroid() + Integer.parseInt(redisLink.get(PlatformType.ANDROID.value())));
+        link.setVisitCountFromIOS(link.getVisitCountFromIOS() + Integer.parseInt(redisLink.get(PlatformType.IOS.value())));
+        link.setVisitCountFromOtherOs(link.getVisitCountFromOtherOs() + Integer.parseInt(redisLink.get(PlatformType.OTHER_OS.value())));
     }
 
     private void deleteLinkFromRedisWithCode(String code){
