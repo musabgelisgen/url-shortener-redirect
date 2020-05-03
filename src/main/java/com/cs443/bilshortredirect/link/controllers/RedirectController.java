@@ -57,6 +57,7 @@ public class RedirectController {
         Link link = linkService.getLinkByCode(code);
 
         if (link == null) {
+            System.out.println("No link found");
             return ResponseEntity.notFound().build();
         }
 
