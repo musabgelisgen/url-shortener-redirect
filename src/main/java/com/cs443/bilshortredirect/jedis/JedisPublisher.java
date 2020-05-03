@@ -67,17 +67,19 @@ public class JedisPublisher {
     private void updateShadowExpireTime(String code){
         String shadowCode = "shadow:" + code;
         jedis.set(shadowCode, "");
-        jedis.expire(shadowCode, 10);
+        jedis.expire(shadowCode, 60);
     }
 
     void syncDatabaseWithRedis(String code){
         Link link = linkRepository.findByCode(code);
         Map<String, String> redisLink = getVisitCountsFromRedis(code);
 
-        updateRepositoryLinkUsingRedisLink(link, redisLink);
-        linkRepository.save(link);
+        if (link != null){
+            updateRepositoryLinkUsingRedisLink(link, redisLink);
+            linkRepository.save(link);
 
-        deleteLinkFromRedisWithCode(code);
+            deleteLinkFromRedisWithCode(code);
+        }
     }
 
     private void updateRepositoryLinkUsingRedisLink(Link link, Map<String, String> redisLink) {

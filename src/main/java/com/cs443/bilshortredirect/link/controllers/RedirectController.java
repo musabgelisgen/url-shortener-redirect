@@ -50,40 +50,106 @@ public class RedirectController {
         }).start();
     }
 
-    @Throttling(type = ThrottlingType.RemoteAddr, limit = 100, timeUnit = TimeUnit.MINUTES)
+    @Throttling(type = ThrottlingType.HeaderValue, headerName = "X-Forwarded-For", limit = 100, timeUnit = TimeUnit.MINUTES)
     @GetMapping("{code}")
     public ResponseEntity<?> redirectUrl(@PathVariable("code") String code, @RequestHeader(value = "User-Agent") String userAgent) {
         HttpHeaders responseHeaders = new HttpHeaders();
-        List<String> browserAndPlatform = setBrowserAndPlatformFromUserAgent(userAgent);
+        Link link = linkService.getLinkByCode(code);
 
-        Optional<String> url = jedisPublisher.getCachedLink(code);
+        if (link == null) {
+            return ResponseEntity.notFound().build();
+        }
 
-        if (url.isPresent()){
-            try {
-                jedisPublisher.updateCachedLink(code, browserAndPlatform);
-                responseHeaders.setLocation(new URI(url.get()));
-            } catch (URISyntaxException e) {
-                e.printStackTrace();
-            }
+        UserAgent ua = UserAgent.parseUserAgentString(userAgent);
+        String browser = ua.getBrowser().getName();
+        String os = ua.getOperatingSystem().getName();
+
+        if (browser.toLowerCase().contains(BrowserType.CHROME.value())) {
+            link.setVisitCountFromChrome(link.getVisitCountFromChrome() + 1);
+        }
+        else if (browser.toLowerCase().contains(BrowserType.FIREFOX.value())) {
+            link.setVisitCountFromFirefox(link.getVisitCountFromFirefox() + 1);
+        }
+        else if (browser.toLowerCase().contains(BrowserType.SAFARI.value())) {
+            link.setVisitCountFromSafari(link.getVisitCountFromSafari() + 1);
+        }
+        else if (browser.toLowerCase().contains(BrowserType.INTERNET_EXPLORER.value())) {
+            link.setVisitCountFromIE(link.getVisitCountFromIE() + 1);
         }
         else {
-            Link link = linkService.getLinkByCode(code);
-
-            if (link == null) {
-                return ResponseEntity.notFound().build();
-            }
-
-            jedisPublisher.cacheNewLink(link, browserAndPlatform);
-
-            try {
-                responseHeaders.setLocation(new URI(link.getUrl()));
-            } catch (URISyntaxException e) {
-                e.printStackTrace();
-            }
+            link.setVisitCountFromOtherBrowser(link.getVisitCountFromOtherBrowser() + 1);
         }
 
-        return ResponseEntity.status(HttpStatus.SEE_OTHER).headers(responseHeaders).build();
+
+        if (os.toLowerCase().contains(PlatformType.WINDOWS.value())) {
+            link.setVisitCountFromWindows(link.getVisitCountFromWindows() + 1);
+        }
+        else if (os.toLowerCase().contains(PlatformType.LINUX.value())) {
+            link.setVisitCountFromLinux(link.getVisitCountFromLinux() + 1);
+        }
+        else if (os.toLowerCase().contains(PlatformType.MAC.value())) {
+            link.setVisitCountFromOsx(link.getVisitCountFromOsx() + 1);
+        }
+        else if (os.toLowerCase().contains(PlatformType.ANDROID.value())) {
+            link.setVisitCountFromAndroid(link.getVisitCountFromAndroid() + 1);
+        }
+        else if (os.toLowerCase().contains(PlatformType.IOS.value())) {
+            link.setVisitCountFromIOS(link.getVisitCountFromIOS() + 1);
+        }
+        else {
+            link.setVisitCountFromOtherOs(link.getVisitCountFromOtherOs() + 1);
+        }
+
+        Link updatedLink = linkService.updateLink(link);
+
+        if (updatedLink == null){ //expired
+            return ResponseEntity.notFound().build();
+        }
+
+        try {
+            responseHeaders.setLocation(new URI(link.getUrl()));
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
+
+        return ResponseEntity.status(HttpStatus.OK).headers(responseHeaders).build();
     }
+
+//    @Throttling(type = ThrottlingType.HeaderValue, headerName = "X-Forwarded-For", limit = 100, timeUnit = TimeUnit.MINUTES)
+//    @GetMapping("{code}")
+//    public ResponseEntity<?> redirectUrl(@PathVariable("code") String code, @RequestHeader(value = "User-Agent") String userAgent) {
+//        HttpHeaders responseHeaders = new HttpHeaders();
+//        List<String> browserAndPlatform = setBrowserAndPlatformFromUserAgent(userAgent);
+//
+//        Optional<String> url = jedisPublisher.getCachedLink(code);
+//
+//        if (url.isPresent()){
+//            try {
+//                jedisPublisher.updateCachedLink(code, browserAndPlatform);
+//                responseHeaders.setLocation(new URI(url.get()));
+//            } catch (URISyntaxException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//        else {
+//            Link link = linkService.getLinkByCode(code);
+//
+//            if (link == null) {
+//                return ResponseEntity.notFound().build();
+//            }
+//
+//            jedisPublisher.cacheNewLink(link, browserAndPlatform);
+//
+//            try {
+//                responseHeaders.setLocation(new URI(link.getUrl()));
+//            } catch (URISyntaxException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//
+////        return ResponseEntity.status(HttpStatus.SEE_OTHER).headers(responseHeaders).build();
+//        return ResponseEntity.status(HttpStatus.OK).headers(responseHeaders).build();
+//    }
 
     private List<String> setBrowserAndPlatformFromUserAgent(String userAgent) {
         UserAgent ua = UserAgent.parseUserAgentString(userAgent);
