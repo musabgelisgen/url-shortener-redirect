@@ -64,6 +64,8 @@ public class RedirectController {
         String browser = ua.getBrowser().getName();
         String os = ua.getOperatingSystem().getName();
 
+        System.out.println("BROWSER: " + browser + " OS: " + os);
+
         if (browser.toLowerCase().contains(BrowserType.CHROME.value())) {
             link.setVisitCountFromChrome(link.getVisitCountFromChrome() + 1);
         }
