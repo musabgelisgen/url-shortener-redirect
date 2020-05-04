@@ -5,7 +5,7 @@ public enum PlatformType {
     LINUX("linux"),
     MAC("mac"),
     ANDROID("android"),
-    IOS("ios"),
+    IOS("iphone"),
     OTHER_OS("other_os");
 
     private final String value;

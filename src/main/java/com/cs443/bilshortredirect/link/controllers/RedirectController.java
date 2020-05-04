@@ -64,8 +64,6 @@ public class RedirectController {
         String browser = ua.getBrowser().getName();
         String os = ua.getOperatingSystem().getName();
 
-        System.out.println("BROWSER: " + browser + " OS: " + os);
-
         if (browser.toLowerCase().contains(BrowserType.CHROME.value())) {
             link.setVisitCountFromChrome(link.getVisitCountFromChrome() + 1);
         }
@@ -89,14 +87,14 @@ public class RedirectController {
         else if (os.toLowerCase().contains(PlatformType.LINUX.value())) {
             link.setVisitCountFromLinux(link.getVisitCountFromLinux() + 1);
         }
+        else if (os.toLowerCase().contains(PlatformType.IOS.value())) {
+            link.setVisitCountFromIOS(link.getVisitCountFromIOS() + 1);
+        }
         else if (os.toLowerCase().contains(PlatformType.MAC.value())) {
             link.setVisitCountFromOsx(link.getVisitCountFromOsx() + 1);
         }
         else if (os.toLowerCase().contains(PlatformType.ANDROID.value())) {
             link.setVisitCountFromAndroid(link.getVisitCountFromAndroid() + 1);
-        }
-        else if (os.toLowerCase().contains(PlatformType.IOS.value())) {
-            link.setVisitCountFromIOS(link.getVisitCountFromIOS() + 1);
         }
         else {
             link.setVisitCountFromOtherOs(link.getVisitCountFromOtherOs() + 1);
